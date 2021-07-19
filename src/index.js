@@ -1,2 +1,5 @@
 import server from './server.js';
-server.listen(3000, () => { console.log('listening on :3000')});
+import dotenv from 'dotenv';
+dotenv.config();
+
+server.listen(process.env.PORT, () => { console.log(`listening on :${process.env.PORT}`)});
