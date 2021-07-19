@@ -8,7 +8,6 @@ export function addPlayer({ idRoom, playerName }, idPlayer) {
   bootStatus(idRoom);
 }
 
-
 function forwardPlayer(idRoom, playerName, idPlayer) {
   for (let i = 1; i <= 4; i++) {
     const room = rooms[idRoom];
@@ -16,7 +15,7 @@ function forwardPlayer(idRoom, playerName, idPlayer) {
     if (!room[`player${i}`].gameStatus) {
       room[`player${i}`].gameStatus = 'wait';
       room[`player${i}`].playerName = playerName;
-      room[`player${i}`].IdPlayer = idPlayer;
+      room[`player${i}`].idPlayer = idPlayer;
       break;
     }
   }
@@ -43,7 +42,7 @@ function generateRoom() {
     player1: {
       gameStatus: null,
       playerName: null,
-      IdPlayer: null,
+      idPlayer: null,
       game: 'player1',
       lastNumber: 0,
       currentPosition: 1
@@ -51,7 +50,7 @@ function generateRoom() {
     player2: {
       gameStatus: null,
       playerName: null,
-      IdPlayer: null,
+      idPlayer: null,
       game: 'player2',
       lastNumber: 0,
       currentPosition: 1
@@ -59,7 +58,7 @@ function generateRoom() {
     player3: {
       gameStatus: null,
       playerName: null,
-      IdPlayer: null,
+      idPlayer: null,
       game: 'player3',
       lastNumber: 0,
       currentPosition: 1
@@ -67,7 +66,7 @@ function generateRoom() {
     player4: {
       gameStatus: null,
       playerName: null,
-      IdPlayer: null,
+      idPlayer: null,
       game: 'player4',
       lastNumber: 0,
       currentPosition: 1
@@ -129,5 +128,112 @@ export function getGameStatus(idRoom) {
     resourcesTeam1: room.resourcesTeam1,
     resourcesTeam2: room.resourcesTeam2,
     gameStatusGenerally: room.gameStatusGenerally
+  }
+}
+
+export function checkPlayer({ idPlayer, idRoom, game }, diceValue) {
+  const room = rooms[idRoom];
+  if (room[game].idPlayer === idPlayer && room[game].gameStatus === 'playing') {
+    room[game].lastNumber = diceValue;
+    room[game].gameStatus = 'itPlayed';
+    checkIfPairPlayed(idRoom, game);
+  }
+
+}
+
+function checkIfPairPlayed(idRoom, game) {
+  if (game === 'player1' || game === 'player3') {
+    const room = rooms[idRoom];
+    if (room[player1].gameStatus === 'itPlayed' && room[player3].gameStatus === 'itPlayed') {
+      compareResults('player1', 'player3', idRoom)
+    }
+  } else {
+    if (room[player2].gameStatus === 'itPlayed' && room[player4].gameStatus === 'itPlayed') {
+      compareResults('player2', 'player4', idRoom)
+    }
+  }
+
+}
+
+function compareResults(playerTeam1, playerTeam2, idRoom) {
+  const room = rooms[idRoom];
+
+  if (room[playerTeam1].lastNumber === room[playerTeam2].lastNumber) {
+
+    if (room.resources[room[playerTeam1].lastNumber]) {
+      resetResources(idRoom);
+      resetPosition(playerTeam1, playerTeam2, idRoom);
+    } else {
+
+      if (room.resourcesTeam1[room[playerTeam1].lastNumber]) {
+        room[playerTeam1].currentPosition = room[playerTeam1].currentPosition + room[playerTeam1].lastNumber;
+      }
+
+      if(room.resourcesTeam2[room[playerTeam2].lastNumber]) {
+        room[playerTeam2].currentPosition = room[playerTeam2].currentPosition + room[playerTeam2].lastNumber;
+      }
+
+    }
+
+  } else {
+
+    if(room.resources[room[playerTeam1].lastNumber]){
+      room[playerTeam1].currentPosition = room[playerTeam1].currentPosition + room[playerTeam1].lastNumber;
+      room.resources[room[playerTeam1].lastNumber] = false;
+      room.resourcesTeam1[room[playerTeam1].lastNumber] = true;
+    }else if(room.resourcesTeam1[room[playerTeam1].lastNumber]){
+      room[playerTeam1].currentPosition = room[playerTeam1].currentPosition + room[playerTeam1].lastNumber;
+    }
+
+    if(room.resources[room[playerTeam2].lastNumber]){
+      room[playerTeam2].currentPosition = room[playerTeam2].currentPosition + room[playerTeam2].lastNumber;
+      room.resources[room[playerTeam2].lastNumber] = false;
+      room.resourcesTeam2[room[playerTeam2].lastNumber] = true;
+    }else if(room.resourcesTeam2[room[playerTeam2].lastNumber]){
+      room[playerTeam2].currentPosition = room[playerTeam2].currentPosition + room[playerTeam2].lastNumber;
+    }
+
+  }
+  tradeStatusPlayer(playerTeam1, playerTeam2, idRoom);
+
+}
+
+function tradeStatusPlayer(playerTeam1, playerTeam2, idRoom){
+  const room = rooms[idRoom];
+  if(playerTeam1 === 'player1' && playerTeam2 === 'player3'){
+    room['player1'].gameStatus = 'wait';
+    room['player2'].gameStatus = 'playing';
+    room['player3'].gameStatus = 'wait';
+    room['player4'].gameStatus = 'playing';
+  }else{
+    room['player1'].gameStatus = 'playing';
+    room['player2'].gameStatus = 'wait';
+    room['player3'].gameStatus = 'playing';
+    room['player4'].gameStatus = 'wait';
+  }
+}
+
+function resetResources(idRoom) {
+  const room = rooms[idRoom];
+  for (i = 1; i <= 6; i++) {
+    room.resources[i] = true;
+    room.resourcesTeam1[i] = false;
+    room.resourcesTeam2[i] = false;
+  }
+}
+
+function resetPosition(playerTeam1, playerTeam2, idRoom) {
+  const room = rooms[idRoom];
+  room[playerTeam1].currentPosition = 1;
+  room[playerTeam2].currentPosition = 1;
+}
+
+export function getPlayerPosition(idPlayer, idRoom) {
+  for (let i = 1; i <= 4; i++) {
+    const room = rooms[idRoom];
+
+    if (room[`player${i}`].idPlayer === idPlayer) {
+      return room[`player${i}`].game;
+    }
   }
 }
