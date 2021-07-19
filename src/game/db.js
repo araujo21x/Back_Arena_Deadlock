@@ -107,21 +107,25 @@ export function getGameStatus(idRoom) {
         gameStatus: room.player1.gameStatus,
         playerName: room.player1.playerName,
         game: room.player1.game,
+        currentPosition: room.player1.currentPosition,
       },
       player2: {
         gameStatus: room.player2.gameStatus,
         playerName: room.player2.playerName,
         game: room.player2.game,
+        currentPosition: room.player2.currentPosition,
       },
       player3: {
         gameStatus: room.player3.gameStatus,
         playerName: room.player3.playerName,
         game: room.player3.game,
+        currentPosition: room.player3.currentPosition,
       },
       player4: {
         gameStatus: room.player4.gameStatus,
         playerName: room.player4.playerName,
         game: room.player4.game,
+        currentPosition: room.player4.currentPosition,
       }
     },
     resources: room.resources,
@@ -195,7 +199,6 @@ function compareResults(playerTeam1, playerTeam2, idRoom) {
 
   }
   tradeStatusPlayer(playerTeam1, playerTeam2, idRoom);
-
 }
 
 function tradeStatusPlayer(playerTeam1, playerTeam2, idRoom){
