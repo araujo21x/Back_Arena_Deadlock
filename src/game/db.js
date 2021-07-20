@@ -170,8 +170,8 @@ export function checkPlayer({ idPlayer, idRoom, game }, diceValue) {
 }
 
 function checkIfPairPlayed(idRoom, game) {
+  const room = rooms[idRoom];
   if (game === 'player1' || game === 'player3') {
-    const room = rooms[idRoom];
     if (room['player1'].gameStatus === 'itPlayed' && room['player3'].gameStatus === 'itPlayed') {
       compareResults('player1', 'player3', idRoom)
     }
@@ -180,7 +180,6 @@ function checkIfPairPlayed(idRoom, game) {
       compareResults('player2', 'player4', idRoom)
     }
   }
-
 }
 
 function compareResults(playerTeam1, playerTeam2, idRoom) {
