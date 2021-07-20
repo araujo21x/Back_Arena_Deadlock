@@ -63,6 +63,30 @@ function generateRoom() {
       lastNumber: 0,
       currentPosition: 1
     },
+    // player1: {
+    //   gameStatus: 'wait',
+    //   playerName: 'joao',
+    //   idPlayer: 'test1',
+    //   game: 'player1',
+    //   lastNumber: 0,
+    //   currentPosition: 1
+    // },
+    // player2: {
+    //   gameStatus: 'wait',
+    //   playerName: 'marcos',
+    //   idPlayer: 'test2',
+    //   game: 'player2',
+    //   lastNumber: 0,
+    //   currentPosition: 1
+    // },
+    // player3: {
+    //   gameStatus: 'wait',
+    //   playerName: 'anderson',
+    //   idPlayer: 'test3',
+    //   game: 'player3',
+    //   lastNumber: 0,
+    //   currentPosition: 1
+    // },
     player4: {
       gameStatus: null,
       playerName: null,
@@ -137,7 +161,7 @@ export function getGameStatus(idRoom) {
 
 export function checkPlayer({ idPlayer, idRoom, game }, diceValue) {
   const room = rooms[idRoom];
-  if (room[game].idPlayer === idPlayer && room[game].gameStatus === 'playing') {
+   if (room[game].idPlayer === idPlayer && room[game].gameStatus === 'playing') {
     room[game].lastNumber = diceValue;
     room[game].gameStatus = 'itPlayed';
     checkIfPairPlayed(idRoom, game);
@@ -148,11 +172,11 @@ export function checkPlayer({ idPlayer, idRoom, game }, diceValue) {
 function checkIfPairPlayed(idRoom, game) {
   if (game === 'player1' || game === 'player3') {
     const room = rooms[idRoom];
-    if (room[player1].gameStatus === 'itPlayed' && room[player3].gameStatus === 'itPlayed') {
+    if (room['player1'].gameStatus === 'itPlayed' && room['player3'].gameStatus === 'itPlayed') {
       compareResults('player1', 'player3', idRoom)
     }
   } else {
-    if (room[player2].gameStatus === 'itPlayed' && room[player4].gameStatus === 'itPlayed') {
+    if (room['player2'].gameStatus === 'itPlayed' && room['player4'].gameStatus === 'itPlayed') {
       compareResults('player2', 'player4', idRoom)
     }
   }
@@ -218,7 +242,7 @@ function tradeStatusPlayer(playerTeam1, playerTeam2, idRoom){
 
 function resetResources(idRoom) {
   const room = rooms[idRoom];
-  for (i = 1; i <= 6; i++) {
+  for (let i = 1; i <= 6; i++) {
     room.resources[i] = true;
     room.resourcesTeam1[i] = false;
     room.resourcesTeam2[i] = false;
