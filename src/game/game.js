@@ -7,6 +7,6 @@ export function toPlay(sent) {
     checkPlayer(sent, diceValue);
     return false;
   }catch(err){
-    return {err:true, msg:err};
+    return {err:true, msg:err.message};
   }
 }

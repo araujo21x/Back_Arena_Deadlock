@@ -1,5 +1,5 @@
 import { generateRoomId } from '../helper/utils.js';
-import { addPlayer, getGameStatus, getPlayerPosition } from './db.js';
+import { addPlayer, getGameStatus, getPlayerPosition, verifyWinner, restartGame } from './db.js';
 import { toPlay } from './game.js';
 
 export default function (io) {
@@ -17,12 +17,17 @@ export default function (io) {
 
     socket.on('toPlay', (sent) => {
       const answer = toPlay(sent);
-      if(answer){
-        io.to(sent.idRoom).emit('err', {...answer, ...getGameStatus(sent.idRoom)});
-      }else{
-        io.to(sent.idRoom).emit('toPlay', getGameStatus(sent.idRoom));
+      if (answer) {
+        io.to(sent.idRoom).emit('err', { ...answer, ...getGameStatus(sent.idRoom) });
+      } else {
+        const winner = verifyWinner(sent.idRoom);
+        if (winner) {
+          restartGame(sent.idRoom);
+          io.to(sent.idRoom).emit('winner', { ...winner, ...getGameStatus(sent.idRoom) });
+        } else {
+          io.to(sent.idRoom).emit('toPlay', getGameStatus(sent.idRoom));
+        }
       }
-      
     })
   });
 

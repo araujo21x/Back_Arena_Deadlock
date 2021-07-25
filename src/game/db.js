@@ -51,7 +51,7 @@ function generateRoom() {
       idPlayer: null,
       game: 'player2',
       lastNumber: 0,
-      currentPosition: 0
+      currentPosition: 1
     },
     player3: {
       gameStatus: null,
@@ -61,30 +61,6 @@ function generateRoom() {
       lastNumber: 0,
       currentPosition: 1
     },
-    // player1: {
-    //   gameStatus: 'wait',
-    //   playerName: 'joao',
-    //   idPlayer: 'test1',
-    //   game: 'player1',
-    //   lastNumber: 0,
-    //   currentPosition: 1
-    // },
-    // player2: {
-    //   gameStatus: 'wait',
-    //   playerName: 'marcos',
-    //   idPlayer: 'test2',
-    //   game: 'player2',
-    //   lastNumber: 0,
-    //   currentPosition: 1
-    // },
-    // player3: {
-    //   gameStatus: 'wait',
-    //   playerName: 'anderson',
-    //   idPlayer: 'test3',
-    //   game: 'player3',
-    //   lastNumber: 0,
-    //   currentPosition: 1
-    // },
     player4: {
       gameStatus: null,
       playerName: null,
@@ -168,7 +144,7 @@ export function checkPlayer({ idPlayer, idRoom, game }, diceValue) {
     room[game].gameStatus = 'itPlayed';
     setDiceTeam(idRoom, game, diceValue);
     checkIfPairPlayed(idRoom, game);
-  }else{
+  } else {
     throw new Error(`Não é a vez do jogador(a):${room[game].playerName}`);
   }
 }
@@ -189,7 +165,6 @@ function checkIfPairPlayed(idRoom, game) {
       if (criticalZoneCheck(idRoom, 'player2', 'player4')) {
         compareResults('player2', 'player4', idRoom)
       } else {
-        tradeStatusPlayer('player2', 'player4', idRoom);
         throw new Error(`Existe um jogador na zona crítica!`);
       }
     }
@@ -206,32 +181,107 @@ function criticalZoneCheck(idRoom, playerTeam1, playerTeam2) {
       criticalZonePlayer = room[`player${i}`];
     }
   }
-  
+
   if (!criticalZonePlayer) {
     return true
   } else {
     if (criticalZonePlayer.game === playerTeam1 || criticalZonePlayer.game === playerTeam2) {
-      const currentPosition = criticalZonePlayer.currentPosition + criticalZonePlayer.lastNumber;
+      const currentPosition = currentPositionZoneCritic(criticalZonePlayer, idRoom);
       if (currentPosition > 12) {
         return true;
       } else {
+        playerGreaterThan12(idRoom, playerTeam1, playerTeam2)
         return false;
       }
     } else {
+      playerGreaterThan12(idRoom, playerTeam1, playerTeam2)
       return false;
     }
   }
-
 }
 
-function compareResults(playerTeam1, playerTeam2, idRoom) {
+function currentPositionZoneCritic(criticalZonePlayer, idRoom) {
   const room = rooms[idRoom];
+  let currentPosition = 0;
+  if (criticalZonePlayer.game === 'player1' || criticalZonePlayer.game === 'player2') {
+    const lastNum = criticalZonePlayer.lastNumber;
+    if (room.resources[lastNum] || room.resourcesTeam1[lastNum]) {
+      currentPosition = criticalZonePlayer.currentPosition + criticalZonePlayer.lastNumber;
+    }else{
+      currentPosition = criticalZonePlayer.currentPosition;
+    }
+  } else {
+    const lastNum = criticalZonePlayer.lastNumber;
+    if (room.resources[lastNum] || room.resourcesTeam2[lastNum]) {
+      currentPosition = criticalZonePlayer.currentPosition + criticalZonePlayer.lastNumber;
+    }else{
+      currentPosition = criticalZonePlayer.currentPosition;
+    }
+  }
+
+  return currentPosition;
+}
+
+function playerGreaterThan12(idRoom, playerTeam1, playerTeam2) {
+  const room = rooms[idRoom];
+  let error = false;
 
   if (room[playerTeam1].lastNumber === room[playerTeam2].lastNumber) {
 
     if (room.resources[room[playerTeam1].lastNumber]) {
       resetResources(idRoom);
       resetPosition(playerTeam1, playerTeam2, idRoom);
+      error = true
+    } else {
+
+      if (room.resourcesTeam1[room[playerTeam1].lastNumber]) {
+        if (room[playerTeam1].currentPosition > 12) {
+          room[playerTeam1].currentPosition = room[playerTeam1].currentPosition + room[playerTeam1].lastNumber;
+        }
+      }
+
+      if (room.resourcesTeam2[room[playerTeam2].lastNumber]) {
+        if (room[playerTeam2].currentPosition > 12) {
+          room[playerTeam2].currentPosition = room[playerTeam2].currentPosition + room[playerTeam2].lastNumber;
+        }
+      }
+
+    }
+
+  } else {
+    if (room[playerTeam1].currentPosition > 12) {
+      if (room.resources[room[playerTeam1].lastNumber]) {
+        room[playerTeam1].currentPosition = room[playerTeam1].currentPosition + room[playerTeam1].lastNumber;
+        room.resources[room[playerTeam1].lastNumber] = false;
+        room.resourcesTeam1[room[playerTeam1].lastNumber] = true;
+      } else if (room.resourcesTeam1[room[playerTeam1].lastNumber]) {
+        room[playerTeam1].currentPosition = room[playerTeam1].currentPosition + room[playerTeam1].lastNumber;
+      }
+    }
+    if (room[playerTeam2].currentPosition > 12) {
+      if (room.resources[room[playerTeam2].lastNumber]) {
+        room[playerTeam2].currentPosition = room[playerTeam2].currentPosition + room[playerTeam2].lastNumber;
+        room.resources[room[playerTeam2].lastNumber] = false;
+        room.resourcesTeam2[room[playerTeam2].lastNumber] = true;
+      } else if (room.resourcesTeam2[room[playerTeam2].lastNumber]) {
+        room[playerTeam2].currentPosition = room[playerTeam2].currentPosition + room[playerTeam2].lastNumber;
+      }
+    }
+
+  }
+  tradeStatusPlayer(playerTeam1, playerTeam2, idRoom);
+  if (error) throw new Error('Deu deadlock! jogadores tiraram o mesmo valor no dado');
+}
+
+function compareResults(playerTeam1, playerTeam2, idRoom) {
+  const room = rooms[idRoom];
+  let error = false;
+  if (room[playerTeam1].lastNumber === room[playerTeam2].lastNumber) {
+
+    if (room.resources[room[playerTeam1].lastNumber]) {
+      resetResources(idRoom);
+      resetPosition(playerTeam1, playerTeam2, idRoom);
+      error = true
     } else {
 
       if (room.resourcesTeam1[room[playerTeam1].lastNumber]) {
@@ -264,6 +314,7 @@ function compareResults(playerTeam1, playerTeam2, idRoom) {
 
   }
   tradeStatusPlayer(playerTeam1, playerTeam2, idRoom);
+  if (error) throw new Error('Deu deadlock! jogadores tiraram o mesmo valor no dado');
 }
 
 function tradeStatusPlayer(playerTeam1, playerTeam2, idRoom) {
@@ -312,4 +363,90 @@ export function getPlayerPosition(idPlayer, idRoom) {
       return room[`player${i}`].game;
     }
   }
+}
+
+export function verifyWinner(idRoom) {
+  const room = rooms[idRoom];
+  let answer = false;
+
+  for (let i = 1; i <= 4; i++) {
+    const playerWinner = room[`player${i}`].currentPosition >= 25;
+    if (playerWinner) {
+      const teamWinner = room[`player${i}`].currentPosition === 'player1' ||
+        room[`player${i}`].currentPosition === 'player2' ? 'equipe 1' : 'equipe 2';
+
+      answer = {
+        teamWinner,
+        playerWinner: room[`player${i}`].playerName
+      }
+      break;
+    }
+  }
+  return answer;
+}
+
+export function restartGame(idRoom) {
+  let room = rooms[idRoom];
+  const resetRoom = {
+    player1: {
+      gameStatus: 'playing',
+      playerName: room.player1.playerName,
+      idPlayer: room.player1.idPlayer,
+      game: 'player1',
+      lastNumber: 0,
+      currentPosition: 1
+    },
+    player2: {
+      gameStatus: 'wait',
+      playerName: room.player2.playerName,
+      idPlayer: room.player2.idPlayer,
+      game: 'player2',
+      lastNumber: 0,
+      currentPosition: 1
+    },
+    player3: {
+      gameStatus: 'playing',
+      playerName: room.player3.playerName,
+      idPlayer: room.player3.idPlayer,
+      game: 'player3',
+      lastNumber: 0,
+      currentPosition: 1
+    },
+    player4: {
+      gameStatus: 'wait',
+      playerName: room.player4.playerName,
+      idPlayer: room.player4.idPlayer,
+      game: 'player4',
+      lastNumber: 0,
+      currentPosition: 1
+    },
+    resources: {
+      1: true,
+      2: true,
+      3: true,
+      4: true,
+      5: true,
+      6: true,
+    },
+    resourcesTeam1: {
+      1: false,
+      2: false,
+      3: false,
+      4: false,
+      5: false,
+      6: false,
+    },
+    resourcesTeam2: {
+      1: false,
+      2: false,
+      3: false,
+      4: false,
+      5: false,
+      6: false,
+    },
+    gameStatusGenerally: 'inGame',
+    diceValueTeam1: 0,
+    diceValueTeam2: 0
+  }
+  room = resetRoom;
 }
