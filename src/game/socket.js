@@ -20,13 +20,13 @@ export default function (io) {
       if (answer) {
         io.to(sent.idRoom).emit('err', { ...answer, ...getGameStatus(sent.idRoom) });
       } else {
-        const winner = verifyWinner(sent.idRoom);
-        if (winner) {
-          restartGame(sent.idRoom);
-          io.to(sent.idRoom).emit('winner', { ...winner, ...getGameStatus(sent.idRoom) });
-        } else {
-          io.to(sent.idRoom).emit('toPlay', getGameStatus(sent.idRoom));
-        }
+        // const winner = verifyWinner(sent.idRoom);
+        // if (winner) {
+        //   restartGame(sent.idRoom);
+        //   io.to(sent.idRoom).emit('winner', { ...winner, ...getGameStatus(sent.idRoom) });
+        // } else {
+        io.to(sent.idRoom).emit('toPlay', getGameStatus(sent.idRoom));
+        // }
       }
     })
   });
