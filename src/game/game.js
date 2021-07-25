@@ -3,6 +3,10 @@ import { checkPlayer } from './db.js';
 
 export function toPlay(sent) {
   const diceValue = playDice();
-  checkPlayer(sent, diceValue);
-
+  try{
+    checkPlayer(sent, diceValue);
+    return false;
+  }catch(err){
+    return {err:true, msg:err};
+  }
 }

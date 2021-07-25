@@ -16,8 +16,13 @@ export default function (io) {
     });
 
     socket.on('toPlay', (sent) => {
-      toPlay(sent);
-      io.to(sent.idRoom).emit('toPlay', getGameStatus(sent.idRoom));
+      const answer = toPlay(sent);
+      if(answer){
+        io.to(sent.idRoom).emit('err', {...answer, ...getGameStatus(sent.idRoom)});
+      }else{
+        io.to(sent.idRoom).emit('toPlay', getGameStatus(sent.idRoom));
+      }
+      
     })
   });
 

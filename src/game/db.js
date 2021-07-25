@@ -1,6 +1,4 @@
-const rooms = {
-
-}
+const rooms = {}
 
 export function addPlayer({ idRoom, playerName }, idPlayer) {
   if (!rooms[idRoom]) rooms[idRoom] = generateRoom();
@@ -53,7 +51,7 @@ function generateRoom() {
       idPlayer: null,
       game: 'player2',
       lastNumber: 0,
-      currentPosition: 1
+      currentPosition: 0
     },
     player3: {
       gameStatus: null,
@@ -119,7 +117,9 @@ function generateRoom() {
       5: false,
       6: false,
     },
-    gameStatusGenerally: 'offline'
+    gameStatusGenerally: 'offline',
+    diceValueTeam1: 0,
+    diceValueTeam2: 0
   }
 }
 
@@ -155,31 +155,73 @@ export function getGameStatus(idRoom) {
     resources: room.resources,
     resourcesTeam1: room.resourcesTeam1,
     resourcesTeam2: room.resourcesTeam2,
-    gameStatusGenerally: room.gameStatusGenerally
+    gameStatusGenerally: room.gameStatusGenerally,
+    diceValueTeam1: room.diceValueTeam1,
+    diceValueTeam2: room.diceValueTeam2,
   }
 }
 
 export function checkPlayer({ idPlayer, idRoom, game }, diceValue) {
   const room = rooms[idRoom];
-   if (room[game].idPlayer === idPlayer && room[game].gameStatus === 'playing') {
+  if (room[game].idPlayer === idPlayer && room[game].gameStatus === 'playing') {
     room[game].lastNumber = diceValue;
     room[game].gameStatus = 'itPlayed';
+    setDiceTeam(idRoom, game, diceValue);
     checkIfPairPlayed(idRoom, game);
+  }else{
+    throw new Error(`Não é a vez do jogador(a):${room[game].playerName}`);
   }
-
 }
 
 function checkIfPairPlayed(idRoom, game) {
   const room = rooms[idRoom];
   if (game === 'player1' || game === 'player3') {
     if (room['player1'].gameStatus === 'itPlayed' && room['player3'].gameStatus === 'itPlayed') {
-      compareResults('player1', 'player3', idRoom)
+      if (criticalZoneCheck(idRoom, 'player1', 'player3')) {
+        compareResults('player1', 'player3', idRoom)
+      } else {
+        tradeStatusPlayer('player1', 'player3', idRoom);
+        throw new Error(`Existe um jogador na zona crítica!`);
+      }
     }
   } else {
     if (room['player2'].gameStatus === 'itPlayed' && room['player4'].gameStatus === 'itPlayed') {
-      compareResults('player2', 'player4', idRoom)
+      if (criticalZoneCheck(idRoom, 'player2', 'player4')) {
+        compareResults('player2', 'player4', idRoom)
+      } else {
+        tradeStatusPlayer('player2', 'player4', idRoom);
+        throw new Error(`Existe um jogador na zona crítica!`);
+      }
     }
   }
+}
+
+function criticalZoneCheck(idRoom, playerTeam1, playerTeam2) {
+  const room = rooms[idRoom];
+  let criticalZonePlayer = null;
+
+  for (let i = 1; i <= 4; i++) {
+    const playerPosition = room[`player${i}`].currentPosition
+    if (playerPosition === 11 || playerPosition === 12) {
+      criticalZonePlayer = room[`player${i}`];
+    }
+  }
+  
+  if (!criticalZonePlayer) {
+    return true
+  } else {
+    if (criticalZonePlayer.game === playerTeam1 || criticalZonePlayer.game === playerTeam2) {
+      const currentPosition = criticalZonePlayer.currentPosition + criticalZonePlayer.lastNumber;
+      if (currentPosition > 12) {
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  }
+
 }
 
 function compareResults(playerTeam1, playerTeam2, idRoom) {
@@ -196,7 +238,7 @@ function compareResults(playerTeam1, playerTeam2, idRoom) {
         room[playerTeam1].currentPosition = room[playerTeam1].currentPosition + room[playerTeam1].lastNumber;
       }
 
-      if(room.resourcesTeam2[room[playerTeam2].lastNumber]) {
+      if (room.resourcesTeam2[room[playerTeam2].lastNumber]) {
         room[playerTeam2].currentPosition = room[playerTeam2].currentPosition + room[playerTeam2].lastNumber;
       }
 
@@ -204,19 +246,19 @@ function compareResults(playerTeam1, playerTeam2, idRoom) {
 
   } else {
 
-    if(room.resources[room[playerTeam1].lastNumber]){
+    if (room.resources[room[playerTeam1].lastNumber]) {
       room[playerTeam1].currentPosition = room[playerTeam1].currentPosition + room[playerTeam1].lastNumber;
       room.resources[room[playerTeam1].lastNumber] = false;
       room.resourcesTeam1[room[playerTeam1].lastNumber] = true;
-    }else if(room.resourcesTeam1[room[playerTeam1].lastNumber]){
+    } else if (room.resourcesTeam1[room[playerTeam1].lastNumber]) {
       room[playerTeam1].currentPosition = room[playerTeam1].currentPosition + room[playerTeam1].lastNumber;
     }
 
-    if(room.resources[room[playerTeam2].lastNumber]){
+    if (room.resources[room[playerTeam2].lastNumber]) {
       room[playerTeam2].currentPosition = room[playerTeam2].currentPosition + room[playerTeam2].lastNumber;
       room.resources[room[playerTeam2].lastNumber] = false;
       room.resourcesTeam2[room[playerTeam2].lastNumber] = true;
-    }else if(room.resourcesTeam2[room[playerTeam2].lastNumber]){
+    } else if (room.resourcesTeam2[room[playerTeam2].lastNumber]) {
       room[playerTeam2].currentPosition = room[playerTeam2].currentPosition + room[playerTeam2].lastNumber;
     }
 
@@ -224,14 +266,14 @@ function compareResults(playerTeam1, playerTeam2, idRoom) {
   tradeStatusPlayer(playerTeam1, playerTeam2, idRoom);
 }
 
-function tradeStatusPlayer(playerTeam1, playerTeam2, idRoom){
+function tradeStatusPlayer(playerTeam1, playerTeam2, idRoom) {
   const room = rooms[idRoom];
-  if(playerTeam1 === 'player1' && playerTeam2 === 'player3'){
+  if (playerTeam1 === 'player1' && playerTeam2 === 'player3') {
     room['player1'].gameStatus = 'wait';
     room['player2'].gameStatus = 'playing';
     room['player3'].gameStatus = 'wait';
     room['player4'].gameStatus = 'playing';
-  }else{
+  } else {
     room['player1'].gameStatus = 'playing';
     room['player2'].gameStatus = 'wait';
     room['player3'].gameStatus = 'playing';
@@ -252,6 +294,14 @@ function resetPosition(playerTeam1, playerTeam2, idRoom) {
   const room = rooms[idRoom];
   room[playerTeam1].currentPosition = 1;
   room[playerTeam2].currentPosition = 1;
+}
+
+function setDiceTeam(idRoom, game, diceValue) {
+  if (game === 'player1' || game === 'player2') {
+    rooms[idRoom].diceValueTeam1 = diceValue;
+  } else {
+    rooms[idRoom].diceValueTeam2 = diceValue;
+  }
 }
 
 export function getPlayerPosition(idPlayer, idRoom) {
