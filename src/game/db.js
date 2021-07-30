@@ -165,6 +165,7 @@ function checkIfPairPlayed(idRoom, game) {
       if (criticalZoneCheck(idRoom, 'player2', 'player4')) {
         compareResults('player2', 'player4', idRoom)
       } else {
+        tradeStatusPlayer('player2', 'player4', idRoom);
         throw new Error(`Existe um jogador na zona crítica!`);
       }
     }
@@ -207,14 +208,14 @@ function currentPositionZoneCritic(criticalZonePlayer, idRoom) {
     const lastNum = criticalZonePlayer.lastNumber;
     if (room.resources[lastNum] || room.resourcesTeam1[lastNum]) {
       currentPosition = criticalZonePlayer.currentPosition + criticalZonePlayer.lastNumber;
-    }else{
+    } else {
       currentPosition = criticalZonePlayer.currentPosition;
     }
   } else {
     const lastNum = criticalZonePlayer.lastNumber;
     if (room.resources[lastNum] || room.resourcesTeam2[lastNum]) {
       currentPosition = criticalZonePlayer.currentPosition + criticalZonePlayer.lastNumber;
-    }else{
+    } else {
       currentPosition = criticalZonePlayer.currentPosition;
     }
   }
@@ -249,28 +250,35 @@ function playerGreaterThan12(idRoom, playerTeam1, playerTeam2) {
     }
 
   } else {
-    if (room[playerTeam1].currentPosition > 12) {
-      if (room.resources[room[playerTeam1].lastNumber]) {
-        room[playerTeam1].currentPosition = room[playerTeam1].currentPosition + room[playerTeam1].lastNumber;
-        room.resources[room[playerTeam1].lastNumber] = false;
-        room.resourcesTeam1[room[playerTeam1].lastNumber] = true;
-      } else if (room.resourcesTeam1[room[playerTeam1].lastNumber]) {
-        room[playerTeam1].currentPosition = room[playerTeam1].currentPosition + room[playerTeam1].lastNumber;
+    if (room.resourcesTeam1[room[playerTeam2].lastNumber]
+      && room.resourcesTeam2[room[playerTeam1].lastNumber]) {
+      resetResources(idRoom);
+      resetPosition(playerTeam1, playerTeam2, idRoom);
+      error = true
+    } else {
+      if (room[playerTeam1].currentPosition > 12) {
+        if (room.resources[room[playerTeam1].lastNumber]) {
+          room[playerTeam1].currentPosition = room[playerTeam1].currentPosition + room[playerTeam1].lastNumber;
+          room.resources[room[playerTeam1].lastNumber] = false;
+          room.resourcesTeam1[room[playerTeam1].lastNumber] = true;
+        } else if (room.resourcesTeam1[room[playerTeam1].lastNumber]) {
+          room[playerTeam1].currentPosition = room[playerTeam1].currentPosition + room[playerTeam1].lastNumber;
+        }
       }
-    }
-    if (room[playerTeam2].currentPosition > 12) {
-      if (room.resources[room[playerTeam2].lastNumber]) {
-        room[playerTeam2].currentPosition = room[playerTeam2].currentPosition + room[playerTeam2].lastNumber;
-        room.resources[room[playerTeam2].lastNumber] = false;
-        room.resourcesTeam2[room[playerTeam2].lastNumber] = true;
-      } else if (room.resourcesTeam2[room[playerTeam2].lastNumber]) {
-        room[playerTeam2].currentPosition = room[playerTeam2].currentPosition + room[playerTeam2].lastNumber;
+      if (room[playerTeam2].currentPosition > 12) {
+        if (room.resources[room[playerTeam2].lastNumber]) {
+          room[playerTeam2].currentPosition = room[playerTeam2].currentPosition + room[playerTeam2].lastNumber;
+          room.resources[room[playerTeam2].lastNumber] = false;
+          room.resourcesTeam2[room[playerTeam2].lastNumber] = true;
+        } else if (room.resourcesTeam2[room[playerTeam2].lastNumber]) {
+          room[playerTeam2].currentPosition = room[playerTeam2].currentPosition + room[playerTeam2].lastNumber;
+        }
       }
     }
 
   }
   tradeStatusPlayer(playerTeam1, playerTeam2, idRoom);
-  if (error) throw new Error('Deu deadlock! jogadores tiraram o mesmo valor no dado');
+  if (error) throw new Error('Deadlock!');
 }
 
 function compareResults(playerTeam1, playerTeam2, idRoom) {
@@ -295,26 +303,33 @@ function compareResults(playerTeam1, playerTeam2, idRoom) {
     }
 
   } else {
+    if (room.resourcesTeam1[room[playerTeam2].lastNumber]
+      && room.resourcesTeam2[room[playerTeam1].lastNumber]) {
+      resetResources(idRoom);
+      resetPosition(playerTeam1, playerTeam2, idRoom);
+      error = true
+    } else {
+      if (room.resources[room[playerTeam1].lastNumber]) {
+        room[playerTeam1].currentPosition = room[playerTeam1].currentPosition + room[playerTeam1].lastNumber;
+        room.resources[room[playerTeam1].lastNumber] = false;
+        room.resourcesTeam1[room[playerTeam1].lastNumber] = true;
+      } else if (room.resourcesTeam1[room[playerTeam1].lastNumber]) {
+        room[playerTeam1].currentPosition = room[playerTeam1].currentPosition + room[playerTeam1].lastNumber;
+      }
 
-    if (room.resources[room[playerTeam1].lastNumber]) {
-      room[playerTeam1].currentPosition = room[playerTeam1].currentPosition + room[playerTeam1].lastNumber;
-      room.resources[room[playerTeam1].lastNumber] = false;
-      room.resourcesTeam1[room[playerTeam1].lastNumber] = true;
-    } else if (room.resourcesTeam1[room[playerTeam1].lastNumber]) {
-      room[playerTeam1].currentPosition = room[playerTeam1].currentPosition + room[playerTeam1].lastNumber;
+      if (room.resources[room[playerTeam2].lastNumber]) {
+        room[playerTeam2].currentPosition = room[playerTeam2].currentPosition + room[playerTeam2].lastNumber;
+        room.resources[room[playerTeam2].lastNumber] = false;
+        room.resourcesTeam2[room[playerTeam2].lastNumber] = true;
+      } else if (room.resourcesTeam2[room[playerTeam2].lastNumber]) {
+        room[playerTeam2].currentPosition = room[playerTeam2].currentPosition + room[playerTeam2].lastNumber;
+      }
     }
 
-    if (room.resources[room[playerTeam2].lastNumber]) {
-      room[playerTeam2].currentPosition = room[playerTeam2].currentPosition + room[playerTeam2].lastNumber;
-      room.resources[room[playerTeam2].lastNumber] = false;
-      room.resourcesTeam2[room[playerTeam2].lastNumber] = true;
-    } else if (room.resourcesTeam2[room[playerTeam2].lastNumber]) {
-      room[playerTeam2].currentPosition = room[playerTeam2].currentPosition + room[playerTeam2].lastNumber;
-    }
 
   }
   tradeStatusPlayer(playerTeam1, playerTeam2, idRoom);
-  if (error) throw new Error('Deu deadlock! jogadores tiraram o mesmo valor no dado');
+  if (error) throw new Error('Deadlock!');
 }
 
 function tradeStatusPlayer(playerTeam1, playerTeam2, idRoom) {
