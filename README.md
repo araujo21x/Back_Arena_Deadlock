@@ -43,8 +43,12 @@ ___
 
 ---
 # Pré-Requisito
+---
+  Você vai precisar ter instalado em sua máquina as seguintes ferramentas:
 
-<br> 
+  * [NojeJS](https://nodejs.org/en/) (Pelo menos versão 14.15 ou superior): Runtime de JS no servidor;
+  * [yarn](https://yarnpkg.com/): Gerenciador de pacote;
+  * [Nodemon](https://nodemon.io/) (ferramenta para ambiente de desenvolvimento): Uma maneira da API atualizar sozinha sem precisar reiniciar.
 
   <p align="justify">Caso deseje baixar o código fonte, para que apareça as telas é necessário clonar o front-end do projeto que pode ser acessada neste <a href="https://github.com/araujo21x/Front_Arena_Deadlock" target="_blank">link</a> e fazer ela rodar, aqui é apenas a API.</p>
 
